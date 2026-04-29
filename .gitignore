@@ -1,0 +1,25 @@
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Jupyter Notebook Checkpoints
+.ipynb_checkpoints/
+
+# Data & Artifacts 
+data/
+TRAFFIC_SIGN.zip
+*.h5
+*.keras
+*.pb
+
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Local MLflow / Tracking
+mlruns/
+tensorboard_logs/
