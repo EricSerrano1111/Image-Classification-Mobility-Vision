@@ -1,6 +1,7 @@
 # Image Classification with Deep Learning Using TensorFlow
 **Mobility Vision – Traffic Sign Recognition Pipeline**
-**Traffic Vision API: Serverless Image Classification**
+
+**Traffic Vision API - Serverless Image Classification**
 
 ## Project Overview
 This project demonstrates the complete engineering lifecycle of a deep learning computer vision pipeline designed for the Mobility and Autonomous Transportation sector. The core objective is the development and deployment of a robust Convolutional Neural Network (CNN) capable of identifying 43 distinct classes of traffic signs with high precision. By processing a dataset of over 50,000 images, the model achieved a 91% accuracy rate on unseen validation data, providing a reliable foundation for real-world traffic sign recognition.
