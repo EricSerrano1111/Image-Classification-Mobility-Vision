@@ -1,0 +1,11 @@
+# Exclude Git history
+.git/
+.gitignore
+
+# Exclude Python cache
+__pycache__/
+*.pyc
+
+# Exclude virtual environments
+venv/
+.env

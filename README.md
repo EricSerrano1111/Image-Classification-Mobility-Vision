@@ -1,11 +1,22 @@
 # Image Classification with Deep Learning Using TensorFlow
 **Mobility Vision – Traffic Sign Recognition Pipeline**
+**Traffic Vision API: Serverless Image Classification**
 
-## Overview
-The following details the end-to-end engineering of a deep learning computer vision pipeline designed to classify Traffic Sign Recognition images. This project is highly valuable for the mobility sector as the objective is to develop a robust Convolutional Neural Network (CNN) capable of identifying 43 distinct class of traffic signs. 50,000+ images were processed to achieve a 91% accuracy on unseen data.
+## Project Overview
+This project demonstrates the complete engineering lifecycle of a deep learning computer vision pipeline designed for the Mobility and Autonomous Transportation sector. The core objective is the development and deployment of a robust Convolutional Neural Network (CNN) capable of identifying 43 distinct classes of traffic signs with high precision. By processing a dataset of over 50,000 images, the model achieved a 91% accuracy rate on unseen validation data, providing a reliable foundation for real-world traffic sign recognition.
+Engineering & MLOps Lifecycle
 
-Beyond baseline model accuracy, this serves as a comprehensive MLOps demonstration as it maps the transition from local exploratory data analysis to cloud accelerated GPU (A100) training. As the exploratory data analysis phase is decoupled from the cloud computer phase. A remote Dagshub server was established to track all hyperparameters, telemetry, and model artifacts in order to automatically log via MLflow.
-The below is the complete lifecycle from raw pixel arrays to a deployment ready .h5 model artifact tracked and versioned using Mlflow and Dagshub.
+Beyond baseline predictive accuracy, this repository serves as a comprehensive MLOps demonstration, mapping the transition from local exploratory data analysis (EDA) to high-performance cloud computing:
+
+- **Accelerated Training:** The training phase is decoupled from local hardware, utilizing Cloud GPU (A100) acceleration to handle the high-dimensional pixel arrays and complex weight optimizations of the CNN.
+
+- **Experiment Tracking & Governance:** A remote DagsHub server was established to maintain a rigorous record of the project’s evolution. Utilizing MLflow, all hyperparameters, training telemetry, and model artifacts were automatically logged, versioned, and tracked, ensuring full reproducibility.
+
+- **Production-Grade Serving:** The lifecycle culminates in a production-ready serverless REST API built with FastAPI. This service allows external systems to submit image payloads and receive categorical predictions with associated confidence scores in real-time.
+
+**Deployment & Scalability**
+
+Designed with modern infrastructure standards, the application is fully containerized via Docker and deployed on Google Cloud Run. This architecture bridges the gap between a static .h5 model artifact and a globally accessible, horizontally scalable cloud endpoint. The result is a highly portable and resilient system tailored specifically for the demands of modern mobility and transportation data pipelines.
 
 
 ## Repository Structure
@@ -24,37 +35,93 @@ image-classification-mobility-vision/
 │   ├── 01_EDA_Testing.ipynb       
 │   └── 02_Colab_Env.ipynb          
 │
+├── deployment/     
+│   ├── models/                
+│   │   └── latest_checkpoint.h5  
+│   │
+│   ├── app.py     
+│   ├── Dockerfile        
+│   ├── requirements.txt 
+│   └── .gcloudignore 
+│
+├── tests/
+│   └── test_api.py
+│
 ├── .gitignore               
-├── requirements.txt         
 └── README.md
 ```
 
 ## Getting Started
 
 ### Dependencies:
+This project utilizes a branched technology stack to handle both high-compute deep learning training and lightweight, serverless inference.
+
+Core Languages & Data Science
+
 * Python 3.13.5
-* TensorFlow
+* TensorFlow 
+* Keras
 * Scikit-Learn
 * Pandas
 * NumPy
-* Keras
-* Current Web Browser
-* Jupyter Notebook
-* Google Colab Pro
-* Google Drive
+* Pillow (PIL)
+
+MLOps & Experiment Tracking
+
 * DagsHub
+* MLflow
+* Google Colab Pro
+* Jupyter Notebook
+
+Production Infrastructure (The Deployment Stack)
+
+* FastAPI
+* Uvicorn
+* Docker
+* Google Cloud Run
+* Google Cloud Build
+* Artifact Registry
 
 ### Executing Program
-1. Configure MLflow & DagsHub
-    * This will allow for experiment racking and the ability to save the model as an artifact. When running in Google Colab, store your DagsHub Default Access Token in Colab’s native Secrets manager to secure token data
-2. Acquire Data & Preprocessing
-    * Download the Traffic Sign dataset and compress it into the file name TRAFFIC_SIGN.zip
-    * Running on Google Colab, upload this zip file to the root of your Google Drive
-    * Initial notebook cells in Colab will mount your Google Drive, extract the contents, and verify the file structure.
-3. Model Training (Colab)
-    * Execute the Colab cells sequentially, the pipeline will handle several critical data engineering tasks:
-4. Evaluation & Error Analysis
-    * Run the validation/test cells in order to evaluated the model on unseen data.
+The project is executed in three distinct phases, moving from exploratory data science to scalable cloud production.
+
+**Phase 1: Research & Model Training**
+
+1. Environment: Open the notebooks in notebooks/ via Google Colab Pro or a local Jupyter instance.
+
+2. Experiment Tracking: Ensure the DagsHub/MLflow URI is configured to track telemetry.
+
+3. Execution: Run the training pipeline to process the 50,000+ image dataset using A100 GPU acceleration.
+
+4. Artifact Generation: The finalized .h5 model weights are versioned in MLflow and exported to the deployment/models/ directory for the next phase.
+
+**Phase 2: Containerization & Cloud Deployment**
+
+This phase transforms the static model into a dynamic service.
+
+1. Build Context: Navigate to the deployment/ directory.
+
+2. Containerize: Build the Docker image locally or via Google Cloud Build:
+    
+    *Using Bash*
+
+    - gcloud builds submit --tag gcr.io/[PROJECT_ID]/traffic-vision-api .
+
+3. Deploy: Push the container to Google Cloud Run, ensuring the --memory 2Gi flag is used to accommodate the TensorFlow footprint.
+
+4. Verification: Confirm the service is active via the GCP Console and monitor the initial "cold start" logs.
+
+**Phase 3: Production Inference**
+
+Once deployed, the model can be consumed through two primary interfaces:
+
+1. Interactive Testing: Navigate to the /docs endpoint of your Cloud Run URL to use the FastAPI Swagger UI for manual image uploads.
+
+2. Programmatic Testing: Execute the test_api.py script from a local terminal to simulate a real-world machine-to-machine request:
+    
+    *Using Bash*
+
+    - python tests/test_api.py
 
 ## Expected Results
 
@@ -90,6 +157,41 @@ Two runs will be visible in the logs with the metrics to follow for the second, 
 
 ![Model Metrics](/images/img8.png)
 
+## Deployment
+
+The inference endpoint is currently live and can be consumed via any standard HTTP client. 
+
+1. Local Requirements
+
+    - To run the local test script, you only need the requests library installed. The heavy machine learning dependencies are isolate within the cloud container. 
+        - pip install requests
+
+2. Execution Programmatic 
+
+    - Ensure the test_api.py scription contains the live Cloud Run URL and execute it via a terminal. 
+        - Python test_api.py 
+
+3. Expected Response
+
+    - The serverless container will process the image tensor and return a structured JSON response indicating the classification and confidence metric:
+
+![console output](/images/img9.png)
+
+4. Execution Interactive UI (Swagger)
+    - Navigate to provided Cloud Run URL
+    - Expand the POST/predict route.
+    - Click Try it out and upload a raw image file of a traffic sign and press Execute. 
+
+![UI overview](/images/img10.png)
+
+5.	Observability & Monitoring
+
+    - Beyond standard deployment, this API utilizes Google Cloud Run’s native observability suite to monitor system health and model inference performance in real time. 
+        - Live Telemetry: The built in Metrics dashboard tracks active HTTP requests providing visual confirmation of request volume and inference latencies.
+        - Serverless Auto Scaling: The infrastructure is configured for dynamic traffic management automatically scaling from 0 up to 20 container instances based on demand ensuring high availability while minimizing idle compute costs. 
+        - Continuous Health Tracking: Native integration with Google Cloud Logging captures container lifecycle events and Python stack traces ensuring the Uvicorn ASGI server maintains a healthy, active state.
+
+![GCP Metrics](/images/img11.png)
 
 
 ## Help / Issue Log
@@ -126,24 +228,88 @@ Two runs will be visible in the logs with the metrics to follow for the second, 
 
     - Resolution: Developed a dynamic pathing check using ‘os.listdir('/content/data/')’ to verify the directory structure prior to instantiating the DataFrames, ensuring robust execution regardless of the cloud environment's specific unpacking protocols.
 
+5. Build Pipeline: IAM Permission Denied
+
+    - Symptom: Cloud Build failed immediately with a PERMISSION_DENIED error when attempting to fetch the source code from the staging bucket.
+
+    - Root Cause: By default new Google Cloud projects provision service accounts with zero inherent permissions as a security measure. The default compute robot could not read the uploaded ZIP payload.
+
+    - Resolution: Utilized the gcloud CLI to manually bind the roles/storage.admin and roles/artifactregistry.writer IAM policies to the default compute service account, authorizing the build steps.
+
+6. Infrastructure: Port 8080 Timeout
+
+    - Symptom: The container built successfully but failed deployment with a generic "Failed to start and listen on PORT=8080" error.
+
+    - Root Cause: Cloud Run defaults to a highly restrictive memory allocation (512MB). Loading the heavy TensorFlow/Keras .h5 model weights caused a silent Out of Memory crash before the Uvicorn server could even open the port.
+
+    - Resolution: Executed a vertical scaling operation via the deployment flag --memory 2Gi, providing sufficient RAM to cache the model in memory.
+
+7. Framework: ASGI Module Import Error
+
+    - Symptom: Cloud Run logs indicated: Error loading ASGI app. Could not import module "app". Container exited with status 1.
+
+    - Root Cause: The main FastAPI script was locally named api.py. However, the Dockerfile command (CMD ["uvicorn", "app:app"]) specifically instructed the ASGI server to look for an entry point named app.py.
+
+    - Resolution: Standardized the local and containerized file by renaming api.py to app.py, ensuring environmental parity.
+
 
 
 ## TODO
 
 While the current iteration of the pipeline achieves a viable 91% real-world accuracy. The following enhancements are scheduled for future development phases to harden the model for true edge deployment:
 
-- Data Augmentation for Minority Classes: Implement real-time Keras image augmentation (targeted rotation, zoom, shear, and brightness shifts) specifically focused on low-support classes. This will synthetically expand the dataset and improve recall on rare traffic signs.
-- Edge Optimization (TF Lite): Quantize the final .h5 model weights and convert the artifact to TensorFlow Lite. This will drastically reduce the memory footprint and inference latency, enabling the model to run on embedded vehicle hardware rather than requiring cloud compute.
-- Automated Hyperparameter Tuning: Integrate KerasTuner to systematically sweep and optimize the CNN architectural parameters (filter sizes, optimal dropout rates, dense layer neurons) to push the baseline accuracy closer to 99%.
-- FastAPI / Streamlit Interface: Develop a lightweight web application or API endpoint to serve the model, allowing users to upload raw dashcam images and receive real-time class predictions alongside confidence probability scores.
+- Data Augmentation for Minority Classes: 
+    - Implement real-time Keras image augmentation (targeted rotation, zoom, shear, and brightness shifts) specifically focused on low-support classes. This will synthetically expand the dataset and improve recall on rare traffic signs.
 
+- Edge Optimization (TF Lite): 
+    - Quantize the final .h5 model weights and convert the artifact to TensorFlow Lite. This will drastically reduce the memory footprint and inference latency, enabling the model to run on embedded vehicle hardware rather than requiring cloud compute.
+
+- Automated Hyperparameter Tuning: 
+    - Integrate KerasTuner to systematically sweep and optimize the CNN architectural parameters (filter sizes, optimal dropout rates, dense layer neurons) to push the baseline accuracy closer to 99%.
+
+- FastAPI / Streamlit Interface: **(Complete)** 
+    - Develop a lightweight web application or API endpoint to serve the model, allowing users to upload raw dashcam images and receive real-time class predictions alongside confidence probability scores.
+
+- Repository Consolidation: **(Complete)** 
+    - Merge this deployment architecture with the original exploratory data science codebase to create a single unified repo for the complete mobility practice lifecycle.
+
+- Dictionary Synchronization: 
+    - Refactor the API's class_names mapping to strictly align with the class_indices generated during local model compilation resolving the minor categorical mapping drift identified in production.
+
+- CI/CD Pipeline Integration: 
+    - Implement GitHub Actions to automate the Google Cloud Build and Cloud Run deployment processes, enabling continuous delivery whenever changes are pushed to the main branch.
+
+- Batch Inference Endpoint: 
+    - Develop a secondary /predict_batch route within FastAPI to allow downstream systems to submit multiple images simultaneously for high-throughput processing.
 
 
 ## Authors
 * Lead Developer – **Eric Serrano**
 
 ## Version History
-* 0.1 – Initial Release 
+* 1.1.0 (Current) – Monorepo Consolidation
+
+    * Unified model research and deployment infrastructure into a single repository.
+
+    * Standardized directory structure for MLOps best practices.
+
+    * Updated comprehensive documentation and execution workflows.
+
+* 1.0.0 – Production Release
+
+    * Containerized the inference engine using Docker.
+
+    * Deployed serverless REST API to Google Cloud Run with 2Gi RAM scaling.
+
+    * Implemented FastAPI Swagger UI for interactive testing.
+
+* 0.1.0 – Initial Research & Training
+
+    * Developed Convolutional Neural Network (CNN) architecture for 43-class recognition.
+
+    * Executed A100-accelerated training on 50,000+ images (91% accuracy).
+
+    * Integrated MLflow and DagsHub for experiment tracking and artifact versioning.
 
 ## License
 The MIT License (MIT)
